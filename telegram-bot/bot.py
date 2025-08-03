@@ -179,5 +179,5 @@ if __name__ == "__main__":
         exit(1)
     
     bot = TodoBot(TOKEN)
-    print("🤖 Бот запущен...")
+    print("Bot zapuschen...")
     bot.run()
