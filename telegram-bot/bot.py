@@ -19,6 +19,19 @@ class TodoBot:
         self.token = token
         self.base_path = Path(__file__).parent.parent
         self.todos_path = self.base_path / "todos"
+        try:
+            print("Bot paths - Base: {}, Todos: {}, Exists: {}".format(
+                str(self.base_path.resolve()), 
+                str(self.todos_path.resolve()), 
+                self.todos_path.exists()
+            ))
+            if self.todos_path.exists():
+                files = list(self.todos_path.glob('current/*.md'))
+                print("Current files found: {}".format(len(files)))
+            else:
+                print("Todos path does not exist!")
+        except Exception as e:
+            print("Debug error:", str(e))
         
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Приветственное сообщение"""
@@ -76,7 +89,9 @@ class TodoBot:
         await query.answer()
         
         category = query.data
+        print(f"Button clicked: {category}")
         todos = self._get_todos(category)
+        print(f"Found {len(todos)} todos in category {category}")
         
         if not todos:
             await query.edit_message_text(f"📭 Нет задач в категории '{category}'")
@@ -102,14 +117,26 @@ class TodoBot:
         todos = []
         category_path = self.todos_path / category
         
+        print(f"Looking for todos in: {category_path}")
+        print(f"Path exists: {category_path.exists()}")
+        
         if not category_path.exists():
+            print(f"Category path {category_path} does not exist!")
             return todos
         
-        for file_path in category_path.glob("*.md"):
+        md_files = list(category_path.glob("*.md"))
+        print(f"Found {len(md_files)} .md files: {md_files}")
+        
+        for file_path in md_files:
+            print(f"Parsing file: {file_path}")
             todo = self._parse_todo_file(file_path)
             if todo:
+                print(f"Parsed todo: {todo.get('title', 'No title')}")
                 todos.append(todo)
+            else:
+                print(f"Failed to parse: {file_path}")
         
+        print(f"Total todos in {category}: {len(todos)}")
         return todos
     
     def _parse_todo_file(self, file_path: Path) -> Dict:
